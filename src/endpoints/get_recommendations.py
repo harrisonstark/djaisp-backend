@@ -8,28 +8,24 @@ log = configure_logging()
 
 router = APIRouter()
 
+# TODO
 @router.get("/get_recommendations")
 async def get_recommendations(request: Request):
-    # Get JSON data from the request body (assuming it's a JSON request)
-    try:
-        json_data = await request.json()
-    except ValueError:
-        json_data = {}  # Set an empty dictionary if the request body is not JSON or empty
+    query_params = request.query_params
 
     # Base URL
     base_url = "https://api.spotify.com/v1/recommendations"
 
     # Convert JSON data to query parameters
-    query_params = add_query_params_to_url(base_url, json_data)
+    query_params = add_query_params_to_url(base_url, query_params)
 
-    async with httpx.AsyncClient() as client:
-        response = await client.get(query_params)
-
-    if response.status_code == 200:
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(query_params)
         data = response.json()
         return data
-    else:
+    except Exception as e:
         # Log the error message using the custom logger
-        error_message = "Request failed"
+        error_message = e
         log.error(error_message)
         return {"error": error_message}

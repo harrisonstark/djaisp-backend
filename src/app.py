@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.endpoints import get_recommendations, healthcheck  # Import your endpoint modules here
+from src.endpoints import get_recommendations, get_tokens, healthcheck  # Import your endpoint modules here
 
 app = FastAPI()
 
@@ -17,4 +17,5 @@ app.add_middleware(
 
 # Include the routes from the imported endpoint modules
 app.include_router(get_recommendations.router)
+app.include_router(get_tokens.router)
 app.include_router(healthcheck.router)
