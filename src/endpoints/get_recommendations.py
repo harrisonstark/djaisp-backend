@@ -11,6 +11,7 @@ router = APIRouter()
 # TODO
 @router.get("/get_recommendations")
 async def get_recommendations(request: Request):
+    # TODO if tokens are expired then call a refresh and continue
     query_params = request.query_params
 
     # Base URL
