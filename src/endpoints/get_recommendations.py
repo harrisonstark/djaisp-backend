@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
-from logger import configure_logging
-from utils import add_query_params_to_url
+from src.utils.logger import configure_logging
+from src.utils.utils import add_query_params_to_url
 import httpx
 
 # Set up custom logger for error logging
