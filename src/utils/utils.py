@@ -54,7 +54,7 @@ async def store_tokens(access_token, refresh_token = ""):
     # if user doesnt exist, otherwise you want to update
     document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token}
     if(find_user(user_id, email)):
-        db.update_document(document)
+        db.update_document(user_info, document)
     else:
         db.insert_document(document)
     return user_info
