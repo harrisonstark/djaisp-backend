@@ -1,8 +1,21 @@
 from fastapi import FastAPI
-from src.endpoints import get_recommendations, healthcheck  # Import your endpoint modules here
+from fastapi.middleware.cors import CORSMiddleware
+from src.endpoints import authorize, get_recommendation, healthcheck  # Import your endpoint modules here
 
 app = FastAPI()
 
+# Configure CORS
+origins = ["http://localhost:9090"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include the routes from the imported endpoint modules
-app.include_router(get_recommendations.router)
+app.include_router(get_recommendation.router)
+app.include_router(authorize.router)
 app.include_router(healthcheck.router)
