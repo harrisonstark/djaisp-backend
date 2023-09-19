@@ -30,7 +30,7 @@ async def get_recommendation(request: Request):
     base_url = add_query_params_to_url("https://api.spotify.com/v1/recommendations", new_query_params)
 
     # hardcode from example
-    base_url = 'https://api.spotify.com/v1/recommendations?seed_artists=4NHQUGzhtTLFvgF5SZesLK&seed_genres=classical%2Ccountry&seed_tracks=0c6xIDDpzE81m2q797ordA'
+    base_url = 'https://api.spotify.com/v1/recommendations?limit=10&seed_artists=6sFIWsNpZYqfjUpaCgueju&target_energy=.95&target_valence=.95'
 
     try:
         async with httpx.AsyncClient() as client:
