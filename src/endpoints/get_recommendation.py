@@ -16,7 +16,7 @@ async def get_recommendation(request: Request):
     user_id = query_params['user_id']
     email = query_params['email']
 
-    access_token = retrieve_tokens(user_id, email)['access_token']
+    access_token = retrieve_tokens(user_id, email)["access_token"]
 
     new_query_params = {}
 
