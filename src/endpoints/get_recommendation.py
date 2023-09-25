@@ -35,10 +35,6 @@ async def get_recommendation(request: Request):
         async with httpx.AsyncClient() as client:
             response = await client.get(base_url, headers=headers)
         data = response.json()
-        log.error(data)
-        log.error(data["tracks"])
-        log.error([track for track in data["tracks"]])
-        log.error([track["uri"] for track in data["tracks"]])
         return [track["uri"] for track in data["tracks"]]
     except Exception as e:
         # Log the error message using the custom logger
