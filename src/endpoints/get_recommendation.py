@@ -16,9 +16,11 @@ async def get_recommendation(request: Request):
     user_id = query_params['user_id']
     email = query_params['email']
 
-    access_token = retrieve_tokens(user_id, email)['access_token']
+    access_token = retrieve_tokens(user_id, email)["access_token"]
 
-    new_query_params = {}
+    keys_to_exclude = ['user_id', 'email']
+
+    new_query_params = {key: value for key, value in query_params.items() if key not in keys_to_exclude}
 
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -28,15 +30,12 @@ async def get_recommendation(request: Request):
     # Base URL
     # Convert JSON data to query parameters
     base_url = add_query_params_to_url("https://api.spotify.com/v1/recommendations", new_query_params)
-
-    # hardcode from example
-    base_url = 'https://api.spotify.com/v1/recommendations?seed_artists=4NHQUGzhtTLFvgF5SZesLK&seed_genres=classical%2Ccountry&seed_tracks=0c6xIDDpzE81m2q797ordA'
-
+    log.error(base_url)
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(base_url, headers=headers)
         data = response.json()
-        return data
+        return [track["uri"] for track in data["tracks"]]
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e
