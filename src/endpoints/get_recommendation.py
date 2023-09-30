@@ -23,9 +23,9 @@ async def get_recommendation(request: Request):
 
     message = query_params.get('message', None)
 
-    base_url = "https://api.spotify.com/v1/recommendations?limit=5"
+    base_url = "https://api.spotify.com/v1/recommendations?limit=100" # TODO: CHANGE LIMIT TO 100 AND PICK 5 AT RANDOM
 
-    values = ["acousticness", "danceability", "energy", "instrumentalness", "liveness", "speechiness", "valence"]
+    values = ["danceability", "energy", "instrumentalness", "speechiness", "valence"]
 
     if(message):
         # TODO: seed_genres = chatgpt response, add query params seed_genres
@@ -60,7 +60,10 @@ async def get_recommendation(request: Request):
         async with httpx.AsyncClient() as client:
             response = await client.get(base_url, headers=headers)
         data = response.json()
-        return {"songs": [track["uri"] for track in data["tracks"]], "seed_genres": seed_genres["seed_genres"]}
+        track_uris = [track["uri"] for track in data["tracks"]]
+        random_track_indices = np.random.choice(len(track_uris), size=5, replace=False)
+        selected_tracks = [track_uris[i] for i in random_track_indices]
+        return {"songs": selected_tracks, "seed_genres": seed_genres["seed_genres"]}
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e

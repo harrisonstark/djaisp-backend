@@ -54,7 +54,7 @@ async def store_tokens(access_token, refresh_token = ""):
     user_id = user_info['user_id']
     email = user_info['email']
     # if user doesnt exist, otherwise you want to update
-    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token, 'recommendation_history': [], 'tracker': 0}
+    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token}
     if(find_user(user_id, email)):
         db.update_document(user_info, document)
     else:
@@ -69,6 +69,6 @@ def retrieve_tokens(user_id, email):
 async def refresh_tokens(user_id, email, access_token, refresh_token):
     db = Database()
     hour_from_now = datetime.now() + timedelta(hours=1)
-    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token, 'recommendation_history': [], 'tracker': 0}
+    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token}
     user_document = {'user_id': user_id, 'email': email}
     db.update_document(user_document, document)
