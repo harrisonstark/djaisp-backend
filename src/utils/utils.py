@@ -52,7 +52,7 @@ async def store_tokens(access_token, refresh_token = ""):
     user_id = user_info['user_id']
     email = user_info['email']
     # if user doesnt exist, otherwise you want to update
-    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token}
+    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token, 'recommendation_history': [], 'tracker': 0}
     if(find_user(user_id, email)):
         db.update_document(user_info, document)
     else:
@@ -64,30 +64,9 @@ def retrieve_tokens(user_id, email):
     document = {'user_id': user_id, 'email': email}
     return db.find_one_document(document)
 
-async def refresh_tokens(refresh_token):
-    credentials = f"{os.getenv('CLIENT_ID')}:{os.getenv('CLIENT_SECRET')}"
-
-    # Encode the concatenated string as bytes and then as base64
-    base64_credentials = base64.b64encode(credentials.encode('utf-8')).decode('utf-8')
-
-    body = {
-        "grant_type": "refresh_token",
-        "refresh_token": refresh_token
-    }
-
-    headers = {
-        "Authorization": f"Basic {base64_credentials}",
-        "Content-Type": "application/x-www-form-urlencoded",
-    }
-
-    base_url = "https://accounts.spotify.com/api/token"
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(base_url, data=body, headers=headers)
-        data = response.json()
-        await store_tokens(data['access_token'])
-    except Exception as e:
-        # Log the error message using the custom logger
-        error_message = e
-        log.error(error_message)
-        return {"error": error_message}
+async def refresh_tokens(user_id, email, access_token, refresh_token):
+    db = Database()
+    hour_from_now = datetime.now() + timedelta(hours=1)
+    document = {'user_id': user_id, 'email': email, 'access_token': access_token, 'expire_time': hour_from_now, 'refresh_token': refresh_token, 'recommendation_history': [], 'tracker': 0}
+    user_document = {'user_id': user_id, 'email': email}
+    db.update_document(user_document, document)

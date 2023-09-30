@@ -18,9 +18,12 @@ async def get_recommendation(request: Request):
 
     access_token = retrieve_tokens(user_id, email)["access_token"]
 
-    keys_to_exclude = ['user_id', 'email']
+    keys_to_exclude = ['user_id', 'email', 'message']
 
     new_query_params = {key: value for key, value in query_params.items() if key not in keys_to_exclude}
+
+    message = query_params['message']
+    # seed_genres = request to chatgpt with message
 
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -30,7 +33,6 @@ async def get_recommendation(request: Request):
     # Base URL
     # Convert JSON data to query parameters
     base_url = add_query_params_to_url("https://api.spotify.com/v1/recommendations", new_query_params)
-    log.error(base_url)
     try:
         async with httpx.AsyncClient() as client:
             response = await client.get(base_url, headers=headers)
