@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
-from src.utils.utils import add_query_params_to_url, get_user_info, retrieve_tokens
+from src.utils.utils import add_query_params_to_url, get_user_info, refresh_tokens, retrieve_tokens
 import urllib.parse
+from datetime import datetime
 import httpx
 import numpy as np
 import json
@@ -13,23 +14,28 @@ router = APIRouter()
 
 @router.get("/get_recommendation")
 async def get_recommendation(request: Request):
-    # TODO if tokens are expired then call a refresh and continue
     query_params = request.query_params
 
     user_id = query_params['user_id']
     email = query_params['email']
 
-    access_token = retrieve_tokens(user_id, email)["access_token"]
+    tokens = retrieve_tokens(user_id, email)
+
+    #if(tokens["expire_time"] > datetime.now()):
+        # TODO call a refresh and continue
+        #refresh_tokens(tokens["user_id"], tokens["email"], tokens["access_token"], tokens["refresh_token"])
+
+    access_token = tokens["access_token"]
 
     message = query_params.get('message', None)
 
-    base_url = "https://api.spotify.com/v1/recommendations?limit=100" # TODO: CHANGE LIMIT TO 100 AND PICK 5 AT RANDOM
+    base_url = "https://api.spotify.com/v1/recommendations?limit=100"
 
     values = ["danceability", "energy", "instrumentalness", "speechiness", "valence"]
 
     if(message):
         # TODO: seed_genres = chatgpt response, add query params seed_genres
-        seed_genres = {"seed_genres": "indie-pop"}
+        seed_genres = {"seed_genres": "j-pop"}
         base_url = add_query_params_to_url(base_url, seed_genres)
         base_url = add_query_params_to_url(base_url, {"target_" + str(value): 0.5 for value in values})
     else:
