@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
-from src.utils.utils import add_query_params_to_url, get_user_info, refresh_tokens, retrieve_tokens
+from src.utils.utils import add_query_params_to_url, get_seed_genres, get_user_info, refresh_tokens, retrieve_tokens
 import urllib.parse
 from datetime import datetime
 import httpx
@@ -28,13 +28,14 @@ async def get_recommendation(request: Request):
     access_token = tokens["access_token"]
 
     message = query_params.get('message', None)
+    message = urllib.parse.unquote(message)
 
     base_url = "https://api.spotify.com/v1/recommendations?limit=100"
 
     values = ["danceability", "energy", "instrumentalness", "speechiness", "valence"]
 
     if(message):
-        # TODO: seed_genres = chatgpt response, add query params seed_genres
+        test = await get_seed_genres(message)
         seed_genres = {"seed_genres": "j-pop"}
         base_url = add_query_params_to_url(base_url, seed_genres)
         base_url = add_query_params_to_url(base_url, {"target_" + str(value): 0.5 for value in values})
