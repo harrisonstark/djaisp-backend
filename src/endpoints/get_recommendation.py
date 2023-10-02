@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
-from src.utils.utils import add_query_params_to_url, get_seed_genres, get_user_info, refresh_tokens, retrieve_tokens
+from src.utils.utils import add_query_params_to_url, get_seed_genres, retrieve_tokens
 import urllib.parse
 from datetime import datetime
 import httpx
@@ -28,13 +28,13 @@ async def get_recommendation(request: Request):
     access_token = tokens["access_token"]
 
     message = query_params.get('message', None)
-    message = urllib.parse.unquote(message)
 
     base_url = "https://api.spotify.com/v1/recommendations?limit=100"
 
     values = ["danceability", "energy", "instrumentalness", "speechiness", "valence"]
 
     if(message):
+        message = urllib.parse.unquote(message)
         output_genres = await get_seed_genres(message)
         output_genres = json.loads(output_genres)
         seed_genres = ','.join(output_genres["genres"])
