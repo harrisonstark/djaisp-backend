@@ -35,15 +35,14 @@ async def get_recommendation(request: Request):
     values = ["danceability", "energy", "instrumentalness", "speechiness", "valence"]
 
     if(message):
-        test = await get_seed_genres(message)
-        seed_genres = {"seed_genres": "j-pop"}
-        base_url = add_query_params_to_url(base_url, seed_genres)
+        output_genres = await get_seed_genres(message)
+        output_genres = json.loads(output_genres)
+        seed_genres = ','.join(output_genres["genres"])
+        base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         base_url = add_query_params_to_url(base_url, {"target_" + str(value): 0.5 for value in values})
     else:
         track_list = query_params['track_list']
-        log.error(track_list)
         track_list = urllib.parse.unquote(track_list)
-        log.error(track_list)
         track_list = json.loads(track_list)
         # Extract values for calculation
         attribute_values = {
@@ -54,10 +53,9 @@ async def get_recommendation(request: Request):
                for attribute, values in attribute_values.items()}
         seed_genres = query_params["seed_genres"]
         seed_genres = urllib.parse.unquote(seed_genres)
-        seed_genres = {"seed_genres": seed_genres}
-        base_url = add_query_params_to_url(base_url, seed_genres)
+        base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         base_url = add_query_params_to_url(base_url, output_values)
-        log.error(output_values)
+
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -70,7 +68,7 @@ async def get_recommendation(request: Request):
         track_uris = [track["uri"] for track in data["tracks"]]
         random_track_indices = np.random.choice(len(track_uris), size=5, replace=False)
         selected_tracks = [track_uris[i] for i in random_track_indices]
-        return {"songs": selected_tracks, "seed_genres": seed_genres["seed_genres"]}
+        return {"songs": selected_tracks, "seed_genres": seed_genres}
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e

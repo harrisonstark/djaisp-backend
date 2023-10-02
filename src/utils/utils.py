@@ -92,10 +92,7 @@ async def get_seed_genres(message):
         async with httpx.AsyncClient() as client:
             response = await client.post(base_url, json=body, headers=headers)
         data = response.json()
-        log.error(data)
-        log.error(data.usage.total_tokens)
-        log.error(data.choices[0].message.content)
-        return data.choices[0].message.content
+        return data['choices'][0]['message']['content']
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e
