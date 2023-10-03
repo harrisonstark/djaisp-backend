@@ -1,3 +1,4 @@
+import random
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
 from src.utils.utils import add_query_params_to_url, get_seed_genres, retrieve_tokens
@@ -39,7 +40,7 @@ async def get_recommendation(request: Request):
         output_genres = json.loads(output_genres)
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
-        base_url = add_query_params_to_url(base_url, {"target_" + str(value): 0.5 for value in values})
+        base_url = add_query_params_to_url(base_url, {"target_" + str(value): random.uniform(0.1, 0.9) for value in values})
     else:
         track_list = query_params['track_list']
         track_list = urllib.parse.unquote(track_list)
