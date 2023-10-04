@@ -33,20 +33,34 @@ async def get_recommendation(request: Request):
 
     base_url = "https://api.spotify.com/v1/recommendations?limit=100"
 
-    values = ["danceability", "energy", "valence", "popularity"]
+    values = ["danceability", "speechiness", "instrumentalness", "energy", "valence", "popularity"]
 
     if(message):
+        seed_number = 1
+        seed_count = 4
         prev_uri_list = []
         message = urllib.parse.unquote(message)
         output_genres = await get_seed_genres(message)
-        output_genres = json.loads(output_genres)
+        try:
+            output_genres = json.loads(output_genres)    
+        except Exception as e:
+            log.error("We had trouble parsing" + query_params['track_list'])
+            return {"status": 400}
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
     else:
+        seed_number = int(query_params['seed_number'])
+        seed_number = seed_number + 1
+        seed_count = 16 if seed_number > 8 else seed_number * 2
+
         track_list = query_params['track_list']
         track_list = urllib.parse.unquote(track_list)
-        track_list = json.loads(track_list)
+        try:
+            track_list = json.loads(track_list)    
+        except Exception as e:
+            log.error("We had trouble parsing" + query_params['track_list'])
+            return {"status": 400}
 
         prev_uri_list = [v["uri"] for v in track_list.values()]
 
@@ -64,24 +78,24 @@ async def get_recommendation(request: Request):
 
         # Extract values for calculation
         attribute_values = {
-            attribute: [v[attribute] for v in new_track_list_np] for attribute in track_list["0"].keys() if attribute != "time_listened" and attribute != "thumbs" and attribute != "uri"
+            attribute: [v[attribute] for v in new_track_list_np] for attribute in track_list["0"].keys() if attribute != "thumbs" and attribute != "uri"
         }
         
         output_values = {"target_" + attribute: floor(np.mean(
-            50 + values * np.square([track[attribute] for track in new_track_list_np]) -
-            50 * np.square([track[attribute] for track in new_track_list_np])
-        )) if attribute == "popularity" else
+            0.5 + (np.array(value) / 100) * np.square([track["time_listened"] for track in new_track_list_np]) -
+            0.5 * np.square([track["time_listened"] for track in new_track_list_np])
+        ) * 100) if attribute == "popularity" else
         np.mean(
-            0.5 + values * np.square([track[attribute] for track in new_track_list_np]) -
-            0.5 * np.square([track[attribute] for track in new_track_list_np])
+            0.5 + value * np.square([track["time_listened"] for track in new_track_list_np]) -
+            0.5 * np.square([track["time_listened"] for track in new_track_list_np])
         )
-        for attribute, values in attribute_values.items()}
+        for attribute, value in attribute_values.items() if attribute != "time_listened"}
         
         seed_genres = query_params["seed_genres"]
         seed_genres = urllib.parse.unquote(seed_genres)
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         base_url = add_query_params_to_url(base_url, output_values)
-
+    log.error(base_url)
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/x-www-form-urlencoded",
@@ -93,13 +107,12 @@ async def get_recommendation(request: Request):
         data = response.json()
         track_uris = [track["uri"] for track in data["tracks"]]
         selected_tracks = []
-        while len(selected_tracks) < 5:
+        while len(selected_tracks) < seed_count:
             random_track_index = floor(np.random.choice(len(track_uris), size=1))
             selected_track = track_uris[random_track_index]
             if(selected_track not in selected_tracks and selected_track not in prev_uri_list):
-                log.error(selected_track, "appended")
                 selected_tracks.append(selected_track)
-        return {"songs": selected_tracks, "seed_genres": seed_genres}
+        return {"songs": selected_tracks, "seed_genres": seed_genres, "seed_number": seed_number}
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e
