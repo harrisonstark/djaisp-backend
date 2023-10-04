@@ -1,3 +1,4 @@
+from math import floor
 import random
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
@@ -32,19 +33,22 @@ async def get_recommendation(request: Request):
 
     base_url = "https://api.spotify.com/v1/recommendations?limit=100"
 
-    values = ["danceability", "energy", "instrumentalness", "speechiness", "valence"]
+    values = ["danceability", "energy", "valence", "popularity"]
 
     if(message):
+        prev_uri_list = []
         message = urllib.parse.unquote(message)
         output_genres = await get_seed_genres(message)
         output_genres = json.loads(output_genres)
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
-        base_url = add_query_params_to_url(base_url, {"target_" + str(value): random.uniform(0.1, 0.9) for value in values})
+        base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
     else:
         track_list = query_params['track_list']
         track_list = urllib.parse.unquote(track_list)
         track_list = json.loads(track_list)
+
+        prev_uri_list = [v["uri"] for v in track_list.values()]
 
         # Extract "thumbs" values
         thumbs_values = [v["thumbs"] for v in track_list.values()]
@@ -54,18 +58,24 @@ async def get_recommendation(request: Request):
         down_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == "down"]
         empty_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == ""]
 
-        modified_down_array = [{attribute: 1 - value if attribute != "thumbs" else value for attribute, value in entry.items()} for entry in down_array]
+        modified_down_array = [{attribute: 100 - value if attribute == "popularity" else 1 - value for attribute, value in entry.items() if attribute != "thumbs" and attribute != "uri"} for entry in down_array]
 
         new_track_list_np = np.concatenate([up_array, up_array, modified_down_array, empty_array])
 
         # Extract values for calculation
         attribute_values = {
-            attribute: [v[attribute] for v in new_track_list_np] for attribute in track_list["0"].keys() if attribute != "time_listened" and attribute != "thumbs"
+            attribute: [v[attribute] for v in new_track_list_np] for attribute in track_list["0"].keys() if attribute != "time_listened" and attribute != "thumbs" and attribute != "uri"
         }
         
-        output_values = {"target_" + attribute: np.mean(0.5 + values * np.square([track[attribute] for track in new_track_list_np]) - 
-            0.5 * np.square([track[attribute] for track in new_track_list_np]))
-            for attribute, values in attribute_values.items()}
+        output_values = {"target_" + attribute: floor(np.mean(
+            50 + values * np.square([track[attribute] for track in new_track_list_np]) -
+            50 * np.square([track[attribute] for track in new_track_list_np])
+        )) if attribute == "popularity" else
+        np.mean(
+            0.5 + values * np.square([track[attribute] for track in new_track_list_np]) -
+            0.5 * np.square([track[attribute] for track in new_track_list_np])
+        )
+        for attribute, values in attribute_values.items()}
         
         seed_genres = query_params["seed_genres"]
         seed_genres = urllib.parse.unquote(seed_genres)
@@ -82,8 +92,13 @@ async def get_recommendation(request: Request):
             response = await client.get(base_url, headers=headers)
         data = response.json()
         track_uris = [track["uri"] for track in data["tracks"]]
-        random_track_indices = np.random.choice(len(track_uris), size=5, replace=False)
-        selected_tracks = [track_uris[i] for i in random_track_indices]
+        selected_tracks = []
+        while len(selected_tracks) < 5:
+            random_track_index = floor(np.random.choice(len(track_uris), size=1))
+            selected_track = track_uris[random_track_index]
+            if(selected_track not in selected_tracks and selected_track not in prev_uri_list):
+                log.error(selected_track, "appended")
+                selected_tracks.append(selected_track)
         return {"songs": selected_tracks, "seed_genres": seed_genres}
     except Exception as e:
         # Log the error message using the custom logger
