@@ -8,4 +8,5 @@ def get_credentials(request: Request):
     query_params = request.query_params
     user_id = query_params['user_id']
     email = query_params['email']
-    return {"access_token": retrieve_tokens(user_id, email)["access_token"]}
+    tokens = retrieve_tokens(user_id, email)
+    return {"access_token": tokens["access_token"], "expire_time": tokens["expire_time"]}
