@@ -42,10 +42,10 @@ async def get_recommendation(request: Request):
         message = urllib.parse.unquote(message)
         output_genres = await get_seed_genres(message)
         try:
-            output_genres = json.loads(output_genres)    
+            output_genres = json.loads(output_genres)
         except Exception as e:
-            log.error("We had trouble parsing" + query_params['track_list'])
-            return {"status": 400}
+            log.error("We had trouble parsing" + query_params + output_genres)
+            return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
@@ -60,7 +60,7 @@ async def get_recommendation(request: Request):
             track_list = json.loads(track_list)    
         except Exception as e:
             log.error("We had trouble parsing" + query_params['track_list'])
-            return {"status": 400}
+            return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
 
         prev_uri_list = [v["uri"] for v in track_list.values()]
 
@@ -72,7 +72,7 @@ async def get_recommendation(request: Request):
         down_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == "down"]
         empty_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == ""]
 
-        modified_down_array = [{attribute: 100 - value if attribute == "popularity" else 1 - value for attribute, value in entry.items() if attribute != "thumbs" and attribute != "uri"} for entry in down_array]
+        modified_down_array = [{attribute: 100 - value if attribute == "popularity" else .5 if attribute == "time_listened" else 1 - value for attribute, value in entry.items() if attribute != "thumbs" and attribute != "uri"} for entry in down_array]
 
         new_track_list_np = np.concatenate([up_array, up_array, modified_down_array, empty_array])
 

@@ -5,7 +5,7 @@ from src.endpoints import authorize, get_credentials, get_recommendation, health
 app = FastAPI()
 
 # Configure CORS
-origins = ["http://localhost:9090"]
+origins = ["https://localhost:9090", "https://jwcb4edygp.loclx.io"]
 
 app.add_middleware(
     CORSMiddleware,
