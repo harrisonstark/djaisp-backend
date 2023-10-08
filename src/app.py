@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.endpoints import authorize, get_credentials, get_recommendation, healthcheck  # Import your endpoint modules here
+from src.endpoints import authorize, get_credentials, get_recommendation, healthcheck, chat  # Import your endpoint modules here
 
 app = FastAPI()
 
@@ -20,3 +20,4 @@ app.include_router(authorize.router)
 app.include_router(get_credentials.router)
 app.include_router(get_recommendation.router)
 app.include_router(healthcheck.router)
+app.include_router(chat.router)
