@@ -2,9 +2,8 @@ from math import floor
 import random
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
-from src.utils.utils import add_query_params_to_url, get_seed_genres, retrieve_tokens
+from src.utils.utils import add_query_params_to_url, get_chatgpt_response, retrieve_tokens
 import urllib.parse
-from datetime import datetime
 import httpx
 import numpy as np
 import json
@@ -40,11 +39,11 @@ async def get_recommendation(request: Request):
         seed_count = 4
         prev_uri_list = []
         message = urllib.parse.unquote(message)
-        output_genres = await get_seed_genres(message)
+        output_genres = await get_chatgpt_response(message, "seed_genres")
         try:
             output_genres = json.loads(output_genres)
         except Exception as e:
-            log.error("We had trouble parsing" + query_params + output_genres)
+            log.error("We had trouble parsing" + output_genres)
             return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
