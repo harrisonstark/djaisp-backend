@@ -25,7 +25,7 @@ async def authorize(request: Request):
     body = {
         "grant_type": "authorization_code",
         "code": query_params.get('code'),
-        "redirect_uri": 'https://t0e214fxjz.loclx.io/redirect',
+        "redirect_uri": 'https://kafrmcd72u.loclx.io/redirect',
     }
 
     headers = {
