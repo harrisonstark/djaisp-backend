@@ -91,11 +91,11 @@ async def get_chatgpt_response(message, type):
     }
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(base_url, json=body, headers=headers)
+            response = await client.post(base_url, json=body, headers=headers, timeout=5)
         data = response.json()
         return data['choices'][0]['message']['content']
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e
         log.error(error_message)
-        return {"status": 401, "error": error_message}
+        return {"error": "Error: Oops, I dropped my baton, please try again later.", "message": message}, 401

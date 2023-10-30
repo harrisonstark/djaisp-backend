@@ -22,10 +22,6 @@ async def get_recommendation(request: Request):
 
     tokens = retrieve_tokens(user_id, email)
 
-    #if(tokens["expire_time"] > datetime.now()):
-        # TODO call a refresh and continue
-        #refresh_tokens(tokens["user_id"], tokens["email"], tokens["access_token"], tokens["refresh_token"])
-
     access_token = tokens["access_token"]
 
     message = query_params.get('message', None)
@@ -43,7 +39,7 @@ async def get_recommendation(request: Request):
         try:
             output_genres = json.loads(output_genres)
         except Exception as e:
-            log.error("We had trouble parsing" + output_genres)
+            log.error("We had trouble parsing" + str(output_genres))
             return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
