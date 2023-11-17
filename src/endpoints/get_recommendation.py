@@ -8,10 +8,8 @@ import httpx
 import numpy as np
 import json
 ###
-from emotion import build_model, VALENCE_MAP, AROUSAL_MAP, MODEL_CONFIG, LABELS
 import tensorflow as tf
-from layers import base_layers, projection_layers
-from models import prado
+from src.utils.model import emotion
 ###
 
 # Set up custom logger for error logging
@@ -36,10 +34,6 @@ async def get_recommendation(request: Request):
 
     values = ["danceability", "speechiness", "instrumentalness", "energy", "valence", "popularity"]
 
-    ###
-    model = build_model() #builds model
-    model.load_weights('model/model_checkpoint') #loads weights from checkpoint
-    ###
     
     if(message):
         seed_number = 1
@@ -55,23 +49,16 @@ async def get_recommendation(request: Request):
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         
-        ### should retrieve model output for values
-        results = model.predict(x=[message]) #returns all probabilities for emotions
-        labels = np.flip(np.argsort(results[0])) #sorts 
-
-        label = LABELS[labels[0]]
-        if label == 'neutral': #if neutral is the first option, get second-highest
-            label = LABELS[labels[1]]
-        valence = VALENCE_MAP[label] if VALENCE_MAP[label] else label
-        arousal = AROUSAL_MAP[label] if AROUSAL_MAP[label] else label
-        ###
+        ### gets arousal and valence from message
+        arousal,valence = emotion.predict_emotion(message)
+        #assigns values
         assigned_values = []
         assigned_values.append(("danceability",random.uniform(0.1,0.9)))
         assigned_values.append(("speechiness",random.uniform(0.1,0.9)))
         assigned_values.append(("instrumentalness",random.uniform(0.1,0.9)))
         #values from model
-        assigned_values.append(("energy",valence))
-        assigned_values.append(("valence",arousal))
+        assigned_values.append(("energy",arousal))
+        assigned_values.append(("valence",valence))
         assigned_values.append(("popularity",random.uniform(10,90)))
         #modified base_url code
         base_url = add_query_params_to_url(base_url,{"target_" + str(entry[0]) : entry[1] for entry in assigned_values})
