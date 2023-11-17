@@ -61,9 +61,10 @@ async def get_recommendation(request: Request):
         assigned_values.append(("valence",valence))
         assigned_values.append(("popularity",random.uniform(10,90)))
         #modified base_url code
-        base_url = add_query_params_to_url(base_url,{"target_" + str(entry[0]) : entry[1] for entry in assigned_values})
+        base_url = add_query_params_to_url(base_url,{"target_" + str(value[0]) : value[1] for value in assigned_values})
         #base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
         ###
+        
     else:
         seed_number = int(query_params['seed_number'])
         seed_number = seed_number + 1
