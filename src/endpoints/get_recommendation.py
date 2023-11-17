@@ -2,12 +2,15 @@ from math import floor
 import random
 from fastapi import APIRouter, Request
 from src.utils.logger import configure_logging
-from src.utils.utils import add_query_params_to_url, get_seed_genres, retrieve_tokens
+from src.utils.utils import add_query_params_to_url, get_chatgpt_response, retrieve_tokens
 import urllib.parse
-from datetime import datetime
 import httpx
 import numpy as np
 import json
+###
+import tensorflow as tf
+from src.utils.model import emotion
+###
 
 # Set up custom logger for error logging
 log = configure_logging()
@@ -23,10 +26,6 @@ async def get_recommendation(request: Request):
 
     tokens = retrieve_tokens(user_id, email)
 
-    #if(tokens["expire_time"] > datetime.now()):
-        # TODO call a refresh and continue
-        #refresh_tokens(tokens["user_id"], tokens["email"], tokens["access_token"], tokens["refresh_token"])
-
     access_token = tokens["access_token"]
 
     message = query_params.get('message', None)
@@ -35,20 +34,37 @@ async def get_recommendation(request: Request):
 
     values = ["danceability", "speechiness", "instrumentalness", "energy", "valence", "popularity"]
 
+    
     if(message):
         seed_number = 1
         seed_count = 4
         prev_uri_list = []
         message = urllib.parse.unquote(message)
-        output_genres = await get_seed_genres(message)
+        output_genres = await get_chatgpt_response(message, "seed_genres")
         try:
-            output_genres = json.loads(output_genres)    
+            output_genres = json.loads(output_genres)
         except Exception as e:
-            log.error("We had trouble parsing" + query_params['track_list'])
-            return {"status": 400}
+            log.error("We had trouble parsing" + str(output_genres))
+            return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
-        base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
+        
+        ### gets arousal and valence from message
+        arousal,valence = emotion.predict_emotion(message)
+        #assigns values
+        assigned_values = []
+        assigned_values.append(("danceability",random.uniform(0.1,0.9)))
+        assigned_values.append(("speechiness",random.uniform(0.1,0.9)))
+        assigned_values.append(("instrumentalness",random.uniform(0.1,0.9)))
+        #values from model
+        assigned_values.append(("energy",arousal))
+        assigned_values.append(("valence",valence))
+        assigned_values.append(("popularity",random.uniform(10,90)))
+        #modified base_url code
+        base_url = add_query_params_to_url(base_url,{"target_" + str(value[0]) : value[1] for value in assigned_values})
+        #base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
+        ###
+        
     else:
         seed_number = int(query_params['seed_number'])
         seed_number = seed_number + 1
@@ -60,7 +76,7 @@ async def get_recommendation(request: Request):
             track_list = json.loads(track_list)    
         except Exception as e:
             log.error("We had trouble parsing" + query_params['track_list'])
-            return {"status": 400}
+            return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
 
         prev_uri_list = [v["uri"] for v in track_list.values()]
 
@@ -72,7 +88,7 @@ async def get_recommendation(request: Request):
         down_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == "down"]
         empty_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == ""]
 
-        modified_down_array = [{attribute: 100 - value if attribute == "popularity" else 1 - value for attribute, value in entry.items() if attribute != "thumbs" and attribute != "uri"} for entry in down_array]
+        modified_down_array = [{attribute: 100 - value if attribute == "popularity" else .5 if attribute == "time_listened" else 1 - value for attribute, value in entry.items() if attribute != "thumbs" and attribute != "uri"} for entry in down_array]
 
         new_track_list_np = np.concatenate([up_array, up_array, modified_down_array, empty_array])
 
