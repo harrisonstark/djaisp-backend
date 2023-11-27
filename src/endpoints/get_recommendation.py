@@ -34,7 +34,6 @@ async def get_recommendation(request: Request):
 
     values = ["danceability", "speechiness", "instrumentalness", "energy", "valence", "popularity"]
 
-    
     if(message):
         seed_number = 1
         seed_count = 4
@@ -49,22 +48,14 @@ async def get_recommendation(request: Request):
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
         
-        ### gets arousal and valence from message
-        arousal,valence = emotion.predict_emotion(message)
-        #assigns values
-        assigned_values = []
-        assigned_values.append(("danceability",random.uniform(0.1,0.9)))
-        assigned_values.append(("speechiness",random.uniform(0.1,0.9)))
-        assigned_values.append(("instrumentalness",random.uniform(0.1,0.9)))
-        #values from model
-        assigned_values.append(("energy",arousal))
-        assigned_values.append(("valence",valence))
-        assigned_values.append(("popularity",random.uniform(10,90)))
-        #modified base_url code
-        base_url = add_query_params_to_url(base_url,{"target_" + str(value[0]) : value[1] for value in assigned_values})
-        #base_url = add_query_params_to_url(base_url, {"target_" + str(value): floor(random.uniform(10, 90)) if value == "popularity" else random.uniform(0.1, 0.9) for value in values})
-        ###
-        
+        arousal, valence = request.app.state.predict_emotion(message)
+
+        base_url = add_query_params_to_url(base_url, {"target_" + str(value): 
+                                                      arousal if value =="arousal" 
+                                                      else valence if value == "valence" 
+                                                      else floor(random.uniform(10, 90)) if value == "popularity" 
+                                                      else random.uniform(0.1, 0.9) 
+                                                      for value in values})
     else:
         seed_number = int(query_params['seed_number'])
         seed_number = seed_number + 1
@@ -80,10 +71,8 @@ async def get_recommendation(request: Request):
 
         prev_uri_list = [v["uri"] for v in track_list.values()]
 
-        # Extract "thumbs" values
         thumbs_values = [v["thumbs"] for v in track_list.values()]
 
-        # Create arrays for "thumbs" equal to "up", "down", and ""
         up_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == "up"]
         down_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == "down"]
         empty_array = [v for v, thumbs in zip(track_list.values(), thumbs_values) if thumbs == ""]
@@ -92,7 +81,6 @@ async def get_recommendation(request: Request):
 
         new_track_list_np = np.concatenate([up_array, up_array, modified_down_array, empty_array])
 
-        # Extract values for calculation
         attribute_values = {
             attribute: [v[attribute] for v in new_track_list_np] for attribute in track_list["0"].keys() if attribute != "thumbs" and attribute != "uri"
         }
@@ -130,7 +118,6 @@ async def get_recommendation(request: Request):
                 selected_tracks.append(selected_track)
         return {"songs": selected_tracks, "seed_genres": seed_genres, "seed_number": seed_number}
     except Exception as e:
-        # Log the error message using the custom logger
         error_message = e
         log.error(error_message)
         return {"error": error_message}

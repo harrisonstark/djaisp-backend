@@ -8,7 +8,3 @@ run:
 
 # Shortcut to build, run, install, and start the app in development mode
 start: build run
-
-# Restart the Docker container without rebuilding (not working rn)
-rerun:
-	docker start -i djaisp-backend

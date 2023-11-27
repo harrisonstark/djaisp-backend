@@ -1,5 +1,4 @@
 import tensorflow as tf
-import numpy as np
 
 labels = [
     'admiration',
@@ -94,13 +93,11 @@ AROUSAL_MAP = {
     'neutral': 0.5,
 }
 
-#PRELIMINARY METHOD!!! ideally should have the saved model loaded elsewhere
-def predict_emotion(text):
-    binary = tf.saved_model.load('bin.tf') #change this to int.tf to use the other model, its not much better in terms of accuracy though i think
-    array = binary.serve(tf.constant([text])).numpy()
-    emotion_index = array.argmax()
-    emotion = labels[emotion_index] 
-    return VALENCE_MAP[emotion], AROUSAL_MAP[emotion]
+def predict_emotion(text, model):
+    model_output = model.serve(tf.constant([text])).numpy()
+    emotion_index = model_output.argmax()
+    predicted_emotion = labels[emotion_index]
+    return VALENCE_MAP[predicted_emotion], AROUSAL_MAP[predicted_emotion]
 
 
 
