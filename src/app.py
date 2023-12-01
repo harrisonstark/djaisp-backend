@@ -7,7 +7,7 @@ from tensorflow.saved_model import load
 app = FastAPI()
 
 # Configure CORS
-origins = ["https://localhost:9090", "http://localhost:9090"]
+origins = ["http://localhost:9090"]
 
 app.add_middleware(
     CORSMiddleware,
