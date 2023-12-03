@@ -33,3 +33,34 @@ app.include_router(get_credentials.router)
 app.include_router(get_recommendation.router)
 app.include_router(get_user_information.router)
 app.include_router(healthcheck.router)
+
+'''
+# For future uses, example test cases could be added for endpoints, database, etc in separate file(s):
+from fastapi.testclient import TestClient
+from unittest.mock import patch
+
+client = TestClient(app)
+
+# Test for healthcheck endpoint
+def test_healthcheck():
+    response = client.get("/healthcheck")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
+    
+# Retrieve_tokens from mock
+def mock_retrieve_tokens(user_id, email):
+    # Return mock tokens
+    return {"access_token": "mocked_access_token", "expire_time": "mocked_expire_time"}
+
+# Test for get_credentials endpoint
+patch("src.utils.utls.retrieve_tokens", side_effect=mock_retrieve_tokens)
+def test_get_credentials_success(mock_retrieve_tokens):
+    response = client.get("/get_credentials?user_id=12345&email=example@example.com")
+    assert response.status_code == 200
+    assert response.json() == {
+        "access_token": "mocked_access_token",
+        "expire_time": "mocked_expire_time",
+    }
+
+# ... additional test cases
+'''
