@@ -1,6 +1,6 @@
-# djaisp-backend
+# maistro-backend
 
-DJ AI Senior Project Backend
+MAISTRO Backend
 
 # Starting the program
 
