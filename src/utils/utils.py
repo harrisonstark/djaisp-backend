@@ -104,8 +104,9 @@ async def get_chatgpt_response(message, type):
     except httpx.HTTPStatusError as e:
         # Log the error message using the custom logger
         error_message = e.response.text
-        log.error(error_message)
-        return {'error': 'Error: Oops, I dropped my baton, please try again later.', 'message': message, 'error_message': error_message}, 401
+        status_code = e.response.status_code
+        log.error(f"OpenAI API Error: {status_code} - {error_message}")
+        return {'error': f'Error: Oops, I dropped my baton, please try again later. (Status Code: {status_code})', 'message': message, 'error_message': error_message}, status_code
     except Exception as e:
         # Log the error message using the custom logger
         error_message = e
