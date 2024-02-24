@@ -98,7 +98,7 @@ async def get_chatgpt_response(message, type):
     }
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(base_url, json=body, headers=headers, timeout=5)
+            response = await client.post(base_url, json=body, headers=headers, timeout=10)
         data = response.json()
         return data['choices'][0]['message']['content']
     except Exception as e:
