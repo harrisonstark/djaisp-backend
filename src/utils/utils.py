@@ -105,4 +105,4 @@ async def get_chatgpt_response(message, type):
         # Log the error message using the custom logger
         error_message = e
         log.error(error_message)
-        return {'error': 'Error: Oops, I dropped my baton, please try again later.', 'message': message}, 401
+        return {'error': 'Error: Oops, I dropped my baton, please try again later.', 'message': message, 'error_message': error_message}, 401
