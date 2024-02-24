@@ -41,9 +41,12 @@ async def get_recommendation(request: Request):
         message = urllib.parse.unquote(message)
         output_genres = await get_chatgpt_response(message, "seed_genres")
         try:
-            output_genres = json.loads(output_genres)
+            if isinstance(output_genres, str):
+                output_genres = json.loads(output_genres)
+            elif not isinstance(output_genres, dict):
+                log.error("We had trouble parsing" + str(output_genres) + "Invalid type for output_genres")
         except Exception as e:
-            log.error("We had trouble parsing" + str(output_genres))
+            log.error("We had trouble parsing" + str(output_genres) + "Unknown exception occurred")
             return {"songs": {}, "seed_genres": {}, "seed_number": -1, "status": 400}
         seed_genres = ','.join(output_genres["genres"])
         base_url = add_query_params_to_url(base_url, {"seed_genres": seed_genres})
