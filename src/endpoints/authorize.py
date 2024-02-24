@@ -25,7 +25,7 @@ async def authorize(request: Request):
     body = {
         "grant_type": "authorization_code",
         "code": query_params.get('code'),
-        "redirect_uri": 'http://localhost:9090/redirect',
+        "redirect_uri": 'https://maistro.harrisonstark.net/redirect',
     }
 
     headers = {
