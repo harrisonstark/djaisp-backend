@@ -41,6 +41,7 @@ async def get_recommendation(request: Request):
         message = urllib.parse.unquote(message)
         output_genres = await get_chatgpt_response(message, "seed_genres")
         if isinstance(output_genres, str):
+            output_genres = output_genres.replace("'", '"')
             output_genres = json.loads(output_genres)
         elif not isinstance(output_genres, dict):
             log.error("We had trouble parsing" + str(output_genres) + "Invalid type for output_genres")
