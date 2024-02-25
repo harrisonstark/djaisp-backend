@@ -1,8 +1,6 @@
 # maistro-backend
 
-MAISTRO Backend
-
-## Click [here](https://drive.google.com/drive/folders/1v3yA5ZxQtdbCeEM4nyrUX4LzvDq6f5bn?usp=sharing) for the project's Google Drive
+### Click [here](https://drive.google.com/drive/folders/1v3yA5ZxQtdbCeEM4nyrUX4LzvDq6f5bn?usp=sharing) for the project's Google Drive
 
 # Starting the program
 
