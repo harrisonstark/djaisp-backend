@@ -10,7 +10,7 @@ load_dotenv()
 
 log = configure_logging()
 
-def authenticate_request(method, api, auth):
+def authenticate_request(auth):
     return auth == os.getenv('HSTOKEN')
 
 def json_to_query_params(json_data):
