@@ -10,6 +10,9 @@ load_dotenv()
 
 log = configure_logging()
 
+def authenticate_request(method, api, auth):
+    return auth == os.getenv('HSTOKEN')
+
 def json_to_query_params(json_data):
     if not json_data:
         return ''
@@ -80,7 +83,7 @@ async def get_chatgpt_response(message, type):
         'Authorization': f'Bearer {OPENAI_API_KEY}'
     }
     body = {
-        "model": "gpt-4-0125-preview",
+        "model": "gpt-4o",
         "messages": [
             {
                 "role": "system",
@@ -94,7 +97,8 @@ async def get_chatgpt_response(message, type):
                 "role": "user", 
                 "content": message
             }
-        ]
+        ],
+        "response_format": "json_object" if type == 'seed_genres' else 'text'
     }
     try:
         async with httpx.AsyncClient() as client:

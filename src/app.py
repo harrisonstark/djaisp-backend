@@ -1,8 +1,10 @@
+from urllib.request import Request
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.endpoints import authorize, chat, get_credentials, get_recommendation, get_user_information, healthcheck  # Import your endpoint modules here
 from src.utils.model.emotion import predict_emotion
 from tensorflow.saved_model import load
+from utils.utils import authenticate_request
 
 app = FastAPI()
 
@@ -16,6 +18,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def check_authentication(request: Request, call_next):
+    auth = request.headers.get('HSTOKEN')        
+    if not authenticate_request(request.method, request.url.path, auth):
+        return {"error": "401"}
+    return await call_next(request)
 
 loaded_model = load('src/utils/model/bin.tf')
 
