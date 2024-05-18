@@ -21,9 +21,10 @@ app.add_middleware(
 
 @app.middleware("http")
 async def check_authentication(request: Request, call_next):
-    auth = request.headers.get('HSTOKEN')        
-    if not authenticate_request(auth):
-        return JSONResponse(status_code=401, content={'error': 'Unauthorized request'})
+    if request.method != "OPTIONS":
+        auth = request.headers.get('Authorization')
+        if not authenticate_request(auth):
+            return JSONResponse(status_code=401, content={'error': 'Unauthorized request'})
     return await call_next(request)
 
 loaded_model = load('src/utils/model/bin.tf')
